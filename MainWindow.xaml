@@ -1,0 +1,157 @@
+<Window x:Class="TextEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TextEditor"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:avalonedit="clr-namespace:ICSharpCode.AvalonEdit;assembly=ICSharpCode.AvalonEdit"
+        xmlns:helpers="clr-namespace:TextEditor.Helpers"
+        mc:Ignorable="d"
+        Title="Text Editor" Height="720" Width="1080"
+        Background="#0b0e1e">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="56" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="56" />
+        </Grid.RowDefinitions>
+
+        <!-- Top Bar -->
+        <Border Grid.Row="0" Background="#1a1f3a" Padding="12" >
+            <DockPanel LastChildFill="True">
+                <!-- Document selector -->
+                <ComboBox Width="220"
+                          ItemsSource="{Binding Documents}"
+                          SelectedItem="{Binding SelectedDocument}"
+                          DisplayMemberPath="Name"
+                          Margin="0,0,12,0"
+                          md:HintAssist.Hint="Documents"
+                          Style="{StaticResource MaterialDesignComboBox}"/>
+
+                <!-- Actions -->
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <Button Command="{Binding NewCommand}" Style="{StaticResource MaterialDesignOutlinedButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Plus" Width="18" Height="18"/>
+                            <TextBlock Text="New" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding RenameCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="RenameBox" Width="18" Height="18"/>
+                            <TextBlock Text="Rename" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding DeleteCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Delete" Width="18" Height="18"/>
+                            <TextBlock Text="Delete" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding ExportCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Export" Width="18" Height="18"/>
+                            <TextBlock Text="Export" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding ImportCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Import" Width="18" Height="18"/>
+                            <TextBlock Text="Import" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Editor Area -->
+        <Grid Grid.Row="1">
+            <Grid>
+                <avalonedit:TextEditor x:Name="Editor"
+                                        FontFamily="Consolas"
+                                        FontSize="14"
+                                        ShowLineNumbers="True"
+                                        Foreground="White"
+                                        Background="#000000"
+                                        helpers:AvalonEditTextBinding.BindableText="{Binding SelectedDocument.Content, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Margin="0"/>
+                <!-- Placeholder when empty -->
+                <TextBlock Text="Start typing..." Foreground="#B0B0B0" FontFamily="Consolas" FontSize="14" IsHitTestVisible="False"
+                           Margin="12,8,0,0" VerticalAlignment="Top">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedDocument.Content}" Value="">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+        </Grid>
+
+        <!-- Bottom Bar -->
+        <Border Grid.Row="2" Background="#121528" Padding="10,8">
+            <DockPanel>
+                <!-- Left: Undo/Redo -->
+                <StackPanel Orientation="Horizontal">
+                    <Button Click="Undo_Click" Style="{StaticResource MaterialDesignOutlinedButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Undo" Width="18" Height="18"/>
+                            <TextBlock Text="Undo" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Click="Redo_Click" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Redo" Width="18" Height="18"/>
+                            <TextBlock Text="Redo" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Center: Search -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Grid VerticalAlignment="Center">
+                        <TextBox x:Name="SearchBox" Width="280" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 md:HintAssist.Hint="Search">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="ApplicationCommands.Find"/>
+                            </TextBox.InputBindings>
+                        </TextBox>
+                        <md:PackIcon Kind="Magnify" Width="18" Height="18" Foreground="#B0B0B0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    </Grid>
+                    <Button Click="Find_Click" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="8,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="Magnify" Width="18" Height="18"/>
+                            <TextBlock Text="Find" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Right: Counts and theme toggle -->
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <TextBlock Foreground="White" VerticalAlignment="Center" Text="{Binding SelectedDocument.CharCount, StringFormat={}{0} chars}"/>
+                    <TextBlock Foreground="White" VerticalAlignment="Center" Text="{Binding SelectedDocument.WordCount, StringFormat={}{0} words}" Margin="16,0,0,0"/>
+                    <ToggleButton x:Name="ThemeToggle" Checked="ThemeToggle_Checked" Unchecked="ThemeToggle_Unchecked" IsChecked="{Binding IsDark, Mode=TwoWay}"
+                                  Style="{StaticResource MaterialDesignSwitchToggleButton}" Margin="16,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <md:PackIcon Kind="WeatherNight" Width="18" Height="18"/>
+                            <TextBlock Text="Dark" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </ToggleButton>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Keyboard shortcuts -->
+        <Grid.InputBindings>
+            <KeyBinding Key="Z" Modifiers="Control" Command="ApplicationCommands.Undo"/>
+            <KeyBinding Key="Y" Modifiers="Control" Command="ApplicationCommands.Redo"/>
+            <KeyBinding Key="F" Modifiers="Control" Command="ApplicationCommands.Find"/>
+        </Grid.InputBindings>
+    </Grid>
+</Window>
